@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vxml version = "2.1" application="http://webhosting.voxeo.net/205779/www/root.vxml" xml:lang="fr-fr">
+
+   <!-- event for product selection-->
+   <catch event="product_selected"> 
+      <assign name="product" expr="_message"/>
+      <goto next="#details"/>
+   </catch>
+
+   <!-- event to make an ad change-->
+   <catch event="change_value"> 
+      <if cond="_message == 'quantity'">
+         <!--TODO: upload change to actual database using php-->
+         <assign name="quantity" expr="temp_quantity"/>
+         <prompt>
+            La quantité de votre <value expr="product"/> a été changé à <value expr="quantity"/> kilogrammes.
+         </prompt>
+      <elseif cond="_message == 'price'"/>
+         <!--TODO: upload change to actual database using php-->
+         <assign name="price" expr="temp_price"/>
+         <prompt>
+            Le prix de votre <value expr="product"/> a été changé à <value expr="price"/> C.F.A. franc par kilogramme.
+         </prompt>
+      <else/>
+         <prompt>
+            Quelque chose a mal tourné
+         </prompt>
+      </if>
+      <goto next="#do_more"/>
+   </catch>
+
+   <!--end call event-->
+   <catch event="end"> 
+      <prompt>
+         Merci de votre appel. Au revoir.
+      </prompt>
+       <disconnect/> 
+   </catch>
+
+<!--TODO: check if phone number is known or else ask for region, place and name-->
+
+   <!--Select action-->
+   <menu id="action_selection" dtmf="true">
+      <prompt>
+         Qu'est-ce que tu aimerais faire? Pour créer une nouvelle annonce, appuyez sur 1. Pour modifier l?une de vos annonces, appuyez sur 2.
+      </prompt>
+      <choice dtmf="1" next="#new_ad">create</choice>
+      <choice dtmf="2" next="#change_ad">change</choice>
+   </menu>
+
+   <!--Ask if caller wants to do something else or is done-->
+   <menu id="do_more">
+      <prompt>
+         Voulez-vous effectuer une autre action? Pour faire autre chose, appuyez sur 1. Si vous avez terminé, appuyez sur 2.
+      </prompt>
+      <choice dtmf="1" next="#action_selection">more</choice>
+      <choice dtmf="2" event="end">end</choice>
+   </menu>
+
+   <!--Select product to advertise-->
+   <menu id="new_ad">
+      <prompt>
+         Quel produit voulez-vous annoncer?
+         <enumerate>
+         Pour <value expr="_prompt"/>, appuyez sur <value expr="_dtmf"/>
+         <break time="500"/> <!--necessary to make the enumeration sound audible-->
+         </enumerate>
+      </prompt>
+
+      <choice event="product_selected" dtmf="1" message="Riz">le riz</choice>
+      <choice event="product_selected" dtmf="2" message="Sorgho">le sorgho</choice>
+      <choice event="product_selected" dtmf="3" message="Maïs">le maïs</choice>
+   </menu>
+
+   <!--Fill in details of new ad-->
+   <form id="details">
+      <!--Ask for quantity-->
+      <field name="form_quantity" type="number">
+         <prompt>
+            Combien de kilos de <value expr="product"/> avez-vous à vendre?
+            Entrez la quantité et attendez la question suivante.
+         </prompt>
+         <filled>
+            <assign name="quantity" expr="form_quantity"/>
+         </filled>
+      </field>
+      
+      <!--Ask for price-->
+      <field name="form_price" type="number">
+         <prompt>
+            Quel est le prix au kilo de votre <value expr="product"/>?
+            Entrez le prix et attendez la question suivante.
+         </prompt>
+         <filled>
+            <assign name="price" expr="form_price"/>
+         </filled>
+      </field>
+      
+      <block>
+         <goto next="#confirm_ad"/>
+      </block>
+   </form>
+
+   <!--Confirm the details of the new ad-->
+   <menu id="confirm_ad">
+      <property name="bargein" value="false"/>
+      <prompt>
+         Vous avez fait une nouvelle publicité pour <value expr="quantity"/> kilogrammes de <value expr="product"/> pour <value expr="price"/> C.F.A. Franc par kilogramme.
+         Si cela est correct, appuyez sur 1. Si vous souhaitez recommencer, appuyez sur 2.
+      </prompt>
+      <choice dtmf="1" next="#store_new_ad">correct</choice>
+      <choice dtmf="2" next="#new_ad">retry</choice>
+   </menu>
+
+   <!--Store data of new ad-->
+   <form id="store_new_ad">
+      <block>
+         <!--TODO: store new data to actual database using php-->        
+         <prompt>
+            Merci d'avoir créé une nouvelle annonce.
+            Votre annonce pour <value expr="quantity"/> kilogrammes de <value expr="product"/> pour <value expr="price"/> C.F.A. Franc par kilogramme a été enregistré.
+         </prompt>
+      <goto next="#do_more"/>
+      </block>
+   </form>
+
+   <!--Check if caller has any ads in the system-->
+   <form id="change_ad">
+      <block>
+         <!--TODO: retrieve caller's ads from database-->
+         
+         <if cond="quantity > 0"> <!--this is temporary for demo-->
+            <goto next="#select_ad_to_change"/>
+         <else />
+            <prompt>
+               Vous n'avez aucune publicité.
+            </prompt>
+            <goto next="#do_more"/>
+         </if>
+      </block>
+   </form>
+
+   <!--Select which ad to change-->
+   <menu id="select_ad_to_change">
+      <!--TODO: retrieve ads from database and enumerate them for choices-->
+      <prompt>
+         <!--this is temporary for demo-->
+         Vous avez 1 annonce pour <value expr="quantity"/> kilogrammes de <value expr="product"/> pour <value expr="price"/> C.F.A Franc par kilogramme. 
+         Pour modifier cette annonce, appuyez sur 1.
+      </prompt>
+      <choice dtmf="1" next="#select_what_to_change">ad1</choice>
+   </menu>
+
+   <!--Select which attribute of ad to change-->
+   <menu id="select_what_to_change">
+      <prompt>
+         Que veux-tu changer? Pour modifier la quantité à vendre, appuyez sur 1. Pour modifier le prix, appuyez sur 2.
+      </prompt>
+      <choice dtmf="1" next="#change_quantity">quantity</choice>
+      <choice dtmf="2" next="#change_price">price</choice>
+   </menu>
+
+   <!--Ask for the new quantity-->
+   <form id="change_quantity">
+      <field name="form_quantity" type="number">
+         <prompt>
+            Combien de kilogrammes de <value expr="product"/> avez-vous à vendre?
+            Entrez la quantité et attendez la question suivante.
+         </prompt>
+         <filled>
+            <assign name="temp_quantity" expr="form_quantity"/>
+         </filled>
+      </field>
+
+      <block>
+         <goto next="#confirm_quantity"/>
+      </block>
+   </form>
+
+   <!--Confirm the change of the quantity-->
+   <menu id="confirm_quantity">
+      <property name="bargein" value="false"/>
+      <prompt>
+         Voulez-vous changer la quantité de votre <value expr="product"/> de <value expr="quantity"/> à <value expr="temp_quantity"/> kilogrammes?
+         Si oui, appuyez sur 1. Pour réessayer, appuyez sur 2.
+      </prompt>
+      <choice dtmf="1" event="change_value" message="quantity">confirm</choice>
+      <choice dtmf="2" next="#change_ad">retry</choice>
+   </menu>
+
+   <!--Ask for the new price-->
+   <form id="change_price">
+      <field name="form_price" type="number">
+         <prompt>
+            Quel est le nouveau prix au kilo de votre<value expr="product"/>?
+            Entrez le prix et attendez la question suivante.
+         </prompt>
+         <filled>
+            <assign name="temp_price" expr="form_price"/>
+         </filled>
+      </field>
+
+      <block>
+         <goto next="#confirm_price"/>
+      </block>
+   </form>
+
+   <!--Confirm the change of the price-->   
+   <menu id="confirm_price">
+      <property name="bargein" value="false"/>
+      <prompt>
+         Souhaitez-vous changer le prix de votre <value expr="product"/> de <value expr="price"/> à <value expr="temp_price"/> C.F.A. Franc par kilogramme? 
+         Si oui, appuyez sur 1. Pour réessayer, appuyez sur 2.
+      </prompt>
+      <choice dtmf="1" event="change_value" message="price">confirm</choice>
+      <choice dtmf="2" next="#change_ad">retry</choice>
+   </menu>
+
+</vxml>

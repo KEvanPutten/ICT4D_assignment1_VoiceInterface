@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vxml version="2.1" 
+   xmlns="http://www.w3.org/2001/vxml"
+   application="http://webhosting.voxeo.net/205779/www/root.vxml">
+    
+   <form id="greeting">
+      <block>
+         <!--get callers phone number-->
+         <assign name="user" expr="session.callerid" />
+
+         <!--necessary for demo, to be removed--> 
+         <assign name="quantity" expr="0" /> 
+
+         <!--say greeting-->
+         <prompt>       
+            <audio src="wavs/Hello_8KHz.wav"> <!--Audio file: 'Hello!'-->
+               <break time="1000"/>
+            </audio> 
+            <voice xml:lang="fr">Bonjour!</voice> 
+         </prompt>
+         <goto next="#language selection"/>
+      </block>
+   </form>  
+
+   <!--language selection-->
+   <menu id="language selection" dtmf="true">
+      <prompt>
+         <audio src="wavs/Select_English_8KHz.wav"> <!--Audio file: 'For English, please press 1.'-->
+            <break time="1000"/>
+         </audio> 
+         <voice xml:lang="fr">Pour le français, veuillez appuyer sur 2.</voice>
+      </prompt>
+      <choice dtmf="1" next="http://webhosting.voxeo.net/205779/www/english.vxml">English</choice>
+      <choice dtmf="2" next="http://webhosting.voxeo.net/205779/www/french.vxml ">French</choice>
+   </menu>  
+</vxml>

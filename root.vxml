@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<vxml version="2.0">
+
+   <!-- variables (shared between files in the system)-->
+   <var name="user"/>
+   <var name="product"/>
+   <var name="quantity"/>
+   <var name="price"/>
+   <var name="name"/>
+   <var name="region"/>
+   <var name="place"/>
+
+   <var name="temp_quantity"/>
+   <var name="temp_price"/>
+</vxml>
